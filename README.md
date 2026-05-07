@@ -1,4 +1,3 @@
-[index.html](https://github.com/user-attachments/files/27493319/index.html)
 <html lang="es">
 <head>
 <meta charset="UTF-8">
