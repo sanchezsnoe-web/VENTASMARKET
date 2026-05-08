@@ -1524,13 +1524,15 @@ function getFleterosPendientesMesAnterior(){
   // Fletes del mes anterior
   const extAnt = JSON.parse(localStorage.getItem('fg6_f_ext_'+mesAnt)||'[]');
   const pagosAnt = JSON.parse(localStorage.getItem('fg6_f_pag_'+mesAnt)||'{}');
+  console.log('[Pendientes] mesAnt='+mesAnt+' extAnt='+extAnt.length+' pagosAnt='+Object.keys(pagosAnt).length);
   // Pagos del mes anterior ya liquidados en el mes ACTUAL (guardados aparte)
   const pagadosEnActual = JSON.parse(localStorage.getItem('fg6_f_pag_pendprev_'+mesSel)||'{}');
   
   // Filtrar: solo los que no tienen pago en mes anterior Y no tienen pago en actual
+  // Los pagos usan el índice como key — usar índice para filtrar
   return extAnt
-    .filter(e => !pagosAnt[e.id] && !pagadosEnActual[e.id])
-    .map(e => ({...e, _mesOrigen: mesAnt, _keyPago: e.id}));
+    .filter((e, i) => !pagosAnt[String(i)] && !pagadosEnActual[String(i)])
+    .map((e, i) => ({...e, id: i, _mesOrigen: mesAnt, _keyPago: String(i)}));
 }
 
 function renderFPendientes(){
@@ -1631,7 +1633,7 @@ function registrarFPagoPendientes(met, ref, notas, fecha){
   const pagadosEnActual = JSON.parse(localStorage.getItem('fg6_f_pag_pendprev_'+mesSel)||'{}');
   
   items.forEach(e => {
-    pagadosEnActual[e.id] = {
+    pagadosEnActual[String(e.id)] = {
       metodo: met, ref, notas,
       fecha: fecha || new Date().toISOString().slice(0,10),
       monto: e.monto,
@@ -3123,7 +3125,11 @@ window._recargarApp = function(){
   actualizarFBadges(); actualizarVBadges();
   fDashBuilt={general:false,fletero:false,zonas:false,tipos:false};
   vDashBuilt={general:false,vendedora:false,categorias:false,zonas:false};
-  setTimeout(()=>buildFGeneral(),100);
+  setTimeout(()=>{
+    buildFGeneral();
+    // Renderizar pendientes si la tab de liquidación está visible
+    if(typeof renderFPendientes==='function') renderFPendientes();
+  },100);
 };
 
 // Inicializar app (espera a Firebase si está disponible)
